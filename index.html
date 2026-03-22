@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de Desfases - TimeCalc</title>
+
+  <!-- Meta Tags para PWA -->
+  <meta name="theme-color" content="#1b263b" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="icon-192.png" />
+
+  <!-- Dependencias Externas CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;700&family=Inter:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <!-- Estilos Personalizados -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div class="container-wrapper py-4">
+    <div class="main-card shadow-2xl">
+      <header class="text-center mb-5">
+        <div class="logo-icon mb-2">
+          <i class="fa-solid fa-clock-rotate-left fa-3x text-info-glow"></i>
+        </div>
+        <h1 class="app-title">TIMECALC</h1>
+        <p class="app-subtitle">Calculadora de Desfases para DVR</p>
+        <div class="author-tag">
+          <span class="badge rounded-pill bg-dark-soft">Ismael Flores © 2023-2026</span>
+        </div>
+      </header>
+
+      <main>
+        <!-- SECCIÓN 1: Datos Principales -->
+        <section class="calculation-box mb-4">
+          <div class="section-header mb-3">
+            <i class="fa-solid fa-gauge-high me-2 text-info"></i>
+            <span>Configuración de Desfase Inicial</span>
+          </div>
+          
+          <div class="row g-3">
+            <!-- DVR Side -->
+            <div class="col-md-6">
+              <div class="input-card dvr-border">
+                <div class="input-card-title"><i class="fa-solid fa-video me-2"></i>RELOJ DVR</div>
+                <div class="form-group mb-3">
+                  <label for="fechaDVR"><i class="fa-regular fa-calendar-days me-1"></i> Fecha</label>
+                  <input type="text" id="fechaDVR" class="form-control custom-input" placeholder="dd/mm/aaaa" autocomplete="off" />
+                </div>
+                <div class="form-group">
+                  <label for="horaDVR"><i class="fa-regular fa-clock me-1"></i> Hora</label>
+                  <input type="text" id="horaDVR" class="form-control custom-input timepicker" placeholder="HH:mm:ss" autocomplete="off" inputmode="numeric" />
+                </div>
+              </div>
+            </div>
+            
+            <!-- Official Side -->
+            <div class="col-md-6">
+              <div class="input-card official-border">
+                <div class="input-card-title"><i class="fa-solid fa-tower-broadcast me-2"></i>HORA OFICIAL</div>
+                <div class="form-group mb-3">
+                  <label for="fechaOficial"><i class="fa-regular fa-calendar-days me-1"></i> Fecha</label>
+                  <input type="text" id="fechaOficial" class="form-control custom-input" placeholder="dd/mm/aaaa" autocomplete="off" />
+                </div>
+                <div class="form-group">
+                  <label for="horaOficial"><i class="fa-regular fa-clock me-1"></i> Hora</label>
+                  <input type="text" id="horaOficial" class="form-control custom-input timepicker" placeholder="HH:mm:ss" autocomplete="off" inputmode="numeric" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resultados del Desfase -->
+          <div class="result-display mt-4">
+            <div id="resultado" class="h4 mb-1">Esperando datos...</div>
+            <div id="mensaje" class="status-msg"></div>
+          </div>
+        </section>
+
+        <!-- SECCIÓN 2: Herramientas -->
+        <section id="utilidades" class="tools-container">
+          <div class="section-header mb-3">
+            <i class="fa-solid fa-toolbox me-2 text-warning"></i>
+            <span>Herramientas de Conversión</span>
+          </div>
+
+          <!-- Grid de Botones -->
+          <div class="row g-2 mb-4">
+            <div class="col-6">
+              <button class="tool-btn btn-dvr" onclick="toggleSeccion('ingresoHoraOficial')">
+                <i class="fa-solid fa-magnifying-glass me-2"></i>Buscar DVR
+              </button>
+            </div>
+            <div class="col-6">
+              <button class="tool-btn btn-official" onclick="toggleSeccion('ingresoHoraOficial2')">
+                <i class="fa-solid fa-check-double me-2"></i>Hora Real
+              </button>
+            </div>
+            <div class="col-12 mt-2">
+              <button class="tool-btn btn-manual" onclick="toggleSeccion('seccionManual')">
+                <i class="fa-solid fa-sliders me-2"></i>Desfase Manual
+              </button>
+            </div>
+          </div>
+
+          <!-- Paneles Colapsables -->
+          
+          <!-- Calcular Hora DVR -->
+          <div id="ingresoHoraOficial" style="display: none" class="collapsible-panel mb-3">
+            <div class="panel-header"><i class="fa-solid fa-calendar-check me-2"></i>Orientar Búsqueda en DVR</div>
+            <div class="p-3">
+              <div class="form-group mb-2">
+                <label>Fecha del hecho (Hora Real)</label>
+                <input type="text" id="nuevaFecha" class="form-control custom-input" placeholder="dd/mm/aaaa" />
+              </div>
+              <div class="form-group mb-3">
+                <label>Hora del hecho (Hora Real)</label>
+                <input type="text" id="nuevaHoraOficial" class="form-control custom-input timepicker" placeholder="HH:mm:ss" inputmode="numeric" />
+              </div>
+              <button class="btn btn-action-info w-100" onclick="calcularNuevaHoraDvr()">
+                <i class="fa-solid fa-calculator me-2"></i>Calcular Hora DVR
+              </button>
+              <div id="nuevoResultado"></div>
+            </div>
+          </div>
+
+          <!-- Calcular Hora Oficial -->
+          <div id="ingresoHoraOficial2" style="display: none" class="collapsible-panel mb-3">
+            <div class="panel-header"><i class="fa-solid fa-clock-rotate-left me-2"></i>Obtener Hora Real</div>
+            <div class="p-3">
+              <div class="form-group mb-2">
+                <label>Fecha vista en DVR</label>
+                <input type="text" id="nuevaFecha2" class="form-control custom-input" placeholder="dd/mm/aaaa" />
+              </div>
+              <div class="form-group mb-3">
+                <label>Hora vista en DVR</label>
+                <input type="text" id="nuevaHoraOficial2" class="form-control custom-input timepicker" placeholder="HH:mm:ss" inputmode="numeric" />
+              </div>
+              <button class="btn btn-action-info w-100" onclick="calcularNuevaHora2()">
+                <i class="fa-solid fa-calculator me-2"></i>Calcular Hora Real
+              </button>
+              <div id="nuevoResultado2"></div>
+            </div>
+          </div>
+
+          <!-- Desfase Manual -->
+          <div id="seccionManual" style="display: none" class="collapsible-panel mb-3">
+            <div class="panel-header"><i class="fa-solid fa-keyboard me-2"></i>Ingreso Manual de Desfase</div>
+            <div class="p-3">
+              <div class="manual-offset-grid mb-3">
+                <div class="form-group"><label>Años</label><input type="number" id="manualAnos" class="form-control custom-input sm" value="0" min="0"></div>
+                <div class="form-group"><label>Meses</label><input type="number" id="manualMeses" class="form-control custom-input sm" value="0" min="0"></div>
+                <div class="form-group"><label>Días</label><input type="number" id="manualDias" class="form-control custom-input sm" value="0" min="0"></div>
+                <div class="form-group"><label>Horas</label><input type="number" id="manualHoras" class="form-control custom-input sm" value="0" min="0"></div>
+                <div class="form-group"><label>Mins</label><input type="number" id="manualMinutos" class="form-control custom-input sm" value="0" min="0"></div>
+                <div class="form-group"><label>Segs</label><input type="number" id="manualSegundos" class="form-control custom-input sm" value="0" min="0"></div>
+              </div>
+
+              <div class="type-selector mb-3">
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="manualTipo" id="typeAdelanto" value="adelanto" checked>
+                  <label class="form-check-label" for="typeAdelanto">Adelanto (+)</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="manualTipo" id="typeRetraso" value="retraso">
+                  <label class="form-check-label" for="typeRetraso">Retraso (-)</label>
+                </div>
+              </div>
+
+              <div class="base-time-input p-2 rounded mb-3" style="background: rgba(255,255,255,0.03);">
+                <label class="small text-muted mb-2 d-block">Calcular sobre una base (opcional):</label>
+                <div class="row g-2">
+                  <div class="col-6"><input type="text" id="fechaBaseManual" class="form-control custom-input sm" placeholder="Fecha base" /></div>
+                  <div class="col-6"><input type="text" id="horaBaseManual" class="form-control custom-input sm timepicker" placeholder="Hora base" /></div>
+                </div>
+              </div>
+
+              <button class="btn btn-action-info w-100" onclick="calcularConDesfaseManual()">
+                <i class="fa-solid fa-cloud-arrow-up me-2"></i>Cargar y Aplicar Desfase
+              </button>
+              <div id="resultadoManual"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="mt-5 text-center text-muted small border-top pt-3 opacity-50">
+        <p>TIMECALC v3.5 • PWA Ready</p>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Scripts: Librerías Externas -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/i18n/datepicker-es.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/es.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Scripts Propios -->
+  <script src="script.js"></script>
+  <script>
+    // Registro de Service Worker para PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log("Service Worker activo"))
+          .catch(err => console.error("Error SW:", err));
+      });
+    }
+  </script>
+</body>
+</html>
